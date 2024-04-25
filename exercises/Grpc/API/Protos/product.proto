@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option csharp_namespace = "API";
+
+package product;
+
+service Product {
+  rpc AddProduct (ProductObject) returns (AddProductResponse);
+  rpc GetProduct (ProductProps) returns (GetProductResponse);
+}
+
+message ProductObject {
+  string name = 1;
+  string description = 2;
+}
+
+message AddProductResponse {
+  string status = 1;
+}
+
+message ProductProps {
+  string name = 1;
+}
+
+message GetProductResponse {
+  string status = 1;
+  string name = 2;
+  string description = 3;
+}

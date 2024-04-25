@@ -19,6 +19,7 @@ namespace GrpcServer.Services
             try
             {
                 await _context.AddAsync(new ProductEntity() { Name = product.Name, Description = product.Description });
+                await _context.SaveChangesAsync();
                 return (new AddProductResponse
                 {
                     Status = "Ok"
@@ -39,12 +40,24 @@ namespace GrpcServer.Services
             {
                 var product = _context.Products.FirstOrDefault(x => x.Name == props.Name);
 
+                if (product != null)
+                {
+                    return Task.FromResult(new GetProductResponse()
+                    {
+                        Status = "Ok",
+                        Name = product!.Name,
+                        Description = product.Description
+                    });
+                }
+
                 return Task.FromResult(new GetProductResponse()
                 {
-                    Status = "Ok",
-                    Name = product!.Name,
-                    Description = product.Description
+                    Status = "NotFound",
+                    Name = "",
+                    Description = ""
                 });
+
+
             }
 
             catch { }
