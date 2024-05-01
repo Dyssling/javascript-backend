@@ -31,7 +31,7 @@ namespace Receiver
             _channel = _connection.CreateModel();
             _channel.ExchangeDeclare(_exchangeName, ExchangeType.Direct);
             _channel.QueueDeclare(_queueName, false, false, false, null);
-            _channel.QueueBind(queueName, _exchangeName, _routingKey);
+            _channel.QueueBind(_queueName, _exchangeName, _routingKey);
             _channel.BasicQos(0, 1, false);
 
             _consumer = new EventingBasicConsumer(_channel);
