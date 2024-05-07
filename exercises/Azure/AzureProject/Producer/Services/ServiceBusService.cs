@@ -1,7 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using System.Diagnostics;
 
-namespace API.Services
+namespace Producer.Services
 {
     public class ServiceBusService
     {
@@ -9,43 +9,26 @@ namespace API.Services
         private readonly ServiceBusSender _sender;
         private readonly ServiceBusProcessor _processor;
 
-        private readonly IServiceProvider _provider;
-
-        public ServiceBusService(string connectionString, string queueName, string publishQueueName, IServiceProvider provider)
+        public ServiceBusService(string connectionString, string publishQueueName, string receiveQueueName)
         {
             _client = new ServiceBusClient(connectionString);
             _sender = _client.CreateSender(publishQueueName);
-            _processor = _client.CreateProcessor(queueName);
+            _processor = _client.CreateProcessor(receiveQueueName);
 
             _processor.ProcessMessageAsync += MessageHandler;
             _processor.ProcessErrorAsync += ErrorHandler;
 
-            _provider = provider;
         }
 
         public async Task MessageHandler(ProcessMessageEventArgs args)
         {
             try
             {
-                string email = args.Message.Body.ToString();
+                string response = args.Message.Body.ToString();
 
-                using (var scope = _provider.CreateScope())
-                {
-                    var service = scope.ServiceProvider.GetRequiredService<EmailService>();
+                Console.WriteLine(response);
 
-                    var result = await service.AddNewEmailAsync(email);
-
-                    if (result)
-                    {
-                        await args.CompleteMessageAsync(args.Message);
-                        await PublishAsync("Added email to database.");
-                    }
-
-                    else
-                    {
-                        await PublishAsync("Failed to add email to database.");
-                    }
-                }
+                await args.CompleteMessageAsync(args.Message);
             }
 
             catch (Exception ex)
@@ -57,7 +40,7 @@ namespace API.Services
         public Task ErrorHandler(ProcessErrorEventArgs args)
         {
             string message = args.Exception.ToString();
-            Debug.WriteLine(message);
+            Console.WriteLine(message);
 
             return Task.CompletedTask;
         }
