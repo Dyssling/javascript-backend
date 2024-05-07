@@ -5,9 +5,9 @@ namespace API.Services
     {
         private readonly ServiceBusService _service;
 
-        public ServiceBusBackground()
+        public ServiceBusBackground(IServiceProvider provider)
         {
-            _service = new ServiceBusService("", "email");
+            _service = new ServiceBusService("", "email", provider);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)

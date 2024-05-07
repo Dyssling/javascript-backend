@@ -11,15 +11,17 @@ namespace API.Services
         //private readonly ServiceBusSender _sender;
         private readonly ServiceBusProcessor _processor;
 
-        private readonly IServiceProvider? _provider;
+        private readonly IServiceProvider _provider;
 
-        public ServiceBusService(string connectionString, string queueName)
+        public ServiceBusService(string connectionString, string queueName, IServiceProvider provider)
         {
             _client = new ServiceBusClient(connectionString);
             _processor = _client.CreateProcessor(queueName);
 
             _processor.ProcessMessageAsync += MessageHandler;
             _processor.ProcessErrorAsync += ErrorHandler;
+
+            _provider = provider;
         }
 
         public async Task MessageHandler(ProcessMessageEventArgs args)
@@ -28,17 +30,20 @@ namespace API.Services
             {
                 string message = args.Message.Body.ToString();
 
-                var service = _provider!.GetRequiredService<EmailService>();
-
-                var result = await service.AddNewEmailAsync(message);
-
-                if (result)
+                using (var scope = _provider.CreateScope())
                 {
-                    await args.CompleteMessageAsync(args.Message);
+                    var service = scope.ServiceProvider.GetRequiredService<EmailService>();
+
+                    var result = await service.AddNewEmailAsync(message);
+
+                    if (result)
+                    {
+                        await args.CompleteMessageAsync(args.Message);
+                    }
                 }
             }
 
-            catch { }
+            catch (Exception ex){ Debug.WriteLine(ex.Message); }
         }
 
         public Task ErrorHandler(ProcessErrorEventArgs args)
