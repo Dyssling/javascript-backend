@@ -48,5 +48,8 @@ namespace API.Services
 
             return Task.CompletedTask;
         }
+
+        public async Task StartSubscribingAsync() => await _processor.StartProcessingAsync();
+        public async Task StopSubscribingAsync() => await _processor.StopProcessingAsync();
     }
 }
